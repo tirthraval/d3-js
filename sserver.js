@@ -73,7 +73,7 @@ svg2.append("g")
   .attr("transform", `translate(0, ${height / 2 - margin.bottom})`)
   .call(xAxis);
 
-// Create a brush
+// Create brushes
 const brush = d3.brushX()
   .extent([[0, 0], [width, height / 2 - margin.bottom]])
   .on("brush", brushed)
@@ -83,7 +83,15 @@ svg2.append("g")
   .attr("class", "brush")
   .call(brush);
 
-// Brush event handler
+const brush1 = d3.brushX()
+  .extent([[0, 0], [width, height]])
+  .on("end", clearBrush1);
+
+const brush1G = svg.append("g")
+  .attr("class", "brush1")
+  .call(brush1);
+
+// Brush event handlers
 function brushed(event) {
   const selection = event.selection;
   if (selection) {
@@ -93,11 +101,17 @@ function brushed(event) {
   }
 }
 
-// Brush end event handler
 function brushended(event) {
   if (!event.selection) {
     updateGraph(filterData);
+  } else {
+    // Clear brush1 selection
+    brush1G.call(brush1.move, null);
   }
+}
+
+function clearBrush1(event) {
+  // Do nothing if the brush on the first graph is used
 }
 
 // Function to update the first graph
