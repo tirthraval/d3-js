@@ -87,7 +87,7 @@ const brush1 = d3.brushX()
   .extent([[0, 0], [width, height]])
   .on("end", clearBrush1);
 
-const brush1G = svg.append("g")
+ svg.append("g")
   .attr("class", "brush1")
   .call(brush1);
 
@@ -103,21 +103,77 @@ function brushed(event) {
 
 function brushended(event) {
   if (!event.selection) {
-    updateGraph(filterData);
+    // updateGraph(filterData);
   } else {
     // Clear brush1 selection
-    brush1G.call(brush1.move, null);
+    //brush1G.call(brush1.move, null);
+    svg.selectAll(".circle").remove();
   }
 }
 
+// function clearBrush1(event) {
+//   // Do nothing if the brush on the first graph is used
+
+//   if(event.selection){
+//     const extent = event.selection;
+//     const [x0, x1] = extent.map(newXScale.invert);
+//     const selectedData = filterData.filter(d => d.timestamp >= x0 && d.timestamp <= x1);
+//     console.log(selectedData)
+//     //svg.selectAll(".circle").remove();
+//     svg.selectAll(".circle")
+//     .data(selectedData)
+//     .enter()
+//     .append("circle")
+//     .attr('class', 'circle')
+//     .attr("cx", d => newXScale(d.timestamp))
+//     .attr("cy"  , d=> newYScale(d.value))
+//     .attr("r",3)
+//     .style("fill" ,"red")
+//   }
+//   else{
+   
+//   }
+// }
+let selectedDataPoints = [];
+
 function clearBrush1(event) {
-  // Do nothing if the brush on the first graph is used
+  if (event.selection) {
+    const extent = event.selection;
+    const [x0, x1] = extent.map(newXScale.invert);
+    const selectedData = filterData.filter(d => d.timestamp >= x0 && d.timestamp <= x1);
+   
+    
+    // Add selected data points to the array
+    selectedDataPoints = [...selectedDataPoints, ...selectedData];
+    console.log(selectedDataPoints)
+    // Update circle positions
+    updateCircles();
+  }
+}
+console.log(selectedDataPoints)
+function updateCircles() {
+  // Remove existing circles
+  svg.selectAll(".circle").remove();
+  
+  // Append circles for selected data points
+  svg.selectAll(".circle")
+    .data(selectedDataPoints)
+    .enter()
+    .append("circle")
+    .attr('class', 'circle')
+    .attr("cx", d => newXScale(d.timestamp))
+    .attr("cy", d => newYScale(d.value))
+    .attr("r", 3)
+    .style("fill", "red");
 }
 
+var newXScale;
+var newYScale;
 // Function to update the first graph
 function updateGraph(data) {
-  const newXScale = d3.scaleTime().domain(d3.extent(data, d => d.timestamp)).range([0, width]);
-  const newYScale = d3.scaleLinear().domain([0, d3.max(data, d => +d.value)]).range([height, 0]);
+    
+   newXScale = d3.scaleTime().domain(d3.extent(data, d => d.timestamp)).range([0, width]);
+   newYScale = d3.scaleLinear().domain([0, d3.max(data, d => +d.value)]).range([height, 0]);
 
   const newLine = d3.line()
     .x(d => newXScale(d.timestamp))
